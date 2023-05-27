@@ -14,48 +14,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.9.2/semantic.min.css" integrity="sha512-n//BDM4vMPvyca4bJjZPDh7hlqsQ7hqbP9RH18GF2hTXBY5amBwM2501M0GPiwCU/v9Tor2m13GOTFjk00tkQA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.9.2/semantic.min.js" integrity="sha512-5cguXwRllb+6bcc2pogwIeQmQPXEzn2ddsqAexIBhh7FO1z5Hkek1J9mrK2+rmZCTU6b6pERxI7acnp1MpAg4Q==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <title>React App</title>
+    <style>
+      .item a.active {
+        color: green;
+    }
+    </style>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-
-    <script>
-      $(document)
-        .ready(function() {
-          $('.ui.form')
-            .form({
-              fields: {
-                email: {
-                  identifier  : 'email',
-                  rules: [
-                    {
-                      type   : 'empty',
-                      prompt : 'Please enter your e-mail'
-                    },
-                    {
-                      type   : 'email',
-                      prompt : 'Please enter a valid e-mail'
-                    }
-                  ]
-                },
-                password: {
-                  identifier  : 'password',
-                  rules: [
-                    {
-                      type   : 'empty',
-                      prompt : 'Please enter your password'
-                    },
-                    {
-                      type   : 'length[6]',
-                      prompt : 'Your password must be at least 6 characters'
-                    }
-                  ]
-                }
-              }
-            })
-          ;
-        })
-      ;
-      </script>
   </body>
 </html>

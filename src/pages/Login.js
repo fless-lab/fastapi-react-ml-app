@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-function Login({ setIsLoggedIn }) {
+function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -25,11 +25,9 @@ function Login({ setIsLoggedIn }) {
       const data = await response.json();
 
       if (response.ok) {
-        const { access_token } = data;
+        const { access_token, } = data;
         // Store the access token in local storage or any other secure storage
         localStorage.setItem('access_token', access_token);
-        setIsLoggedIn(true);
-        // Use the <Navigate /> component to redirect
         navigate('/');
       } else {
         const { detail } = data;
@@ -41,6 +39,8 @@ function Login({ setIsLoggedIn }) {
 
     setIsSubmitting(false);
   };
+
+  
 
   return (
     <div className="page-login">

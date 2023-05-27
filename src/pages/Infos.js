@@ -2,7 +2,7 @@ import React from 'react'
 
 function Infos() {
   return (
-    <div>Infos</div>
+    <div>&copy; copyright 2023, Tous droits reservés</div>
   )
 }
 
