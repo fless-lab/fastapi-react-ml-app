@@ -9,6 +9,7 @@ from jose import jwt, JWTError
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from joblib import load
+import numpy as np
 
 app = FastAPI()
 
@@ -56,6 +57,12 @@ class SurvieEntre(BaseModel):
 
 class SurvieSortie(BaseModel):
     survived: str
+
+class PoidEntre(BaseModel):
+    taille: float
+
+class PoidSortie(BaseModel):
+    prediction: float
 
 @app.post("/api/register")
 def register(user: UserCreate):
@@ -129,25 +136,10 @@ def profile(token: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
 
 
 model_survie = load('titanic.joblib')
-
-# @app.post("/api/survivor", tags=["Titanic survivor"])
-# def predict(data: SurvieEntre, token: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
-#     try:
-#         payload = jwt.decode(token.credentials, SECRET_KEY, algorithms=["HS256"])
-#     except JWTError:
-#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide")
-
-#     if token.credentials in token_blacklist:
-#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Le token a été révoqué ou blacklisté")
-
-#     new_data = [[data.age, data.sex, data.pclass]]
-#     prediction = model_survie.predict(new_data)
-#     survived = "Désolé ! Ce passager est mort." if prediction == 1 else "Bonne nouvelle ! Ce passager est en vie."
-
-#     return {"survived": survived,"prediction":prediction}
+model_poid = load('taille.joblib')
 
 @app.post("/api/survivor", tags=["Titanic survivor"])
-def predict(data: SurvieEntre, token: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
+def predict_survivor(data: SurvieEntre, token: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
     try:
         payload = jwt.decode(token.credentials, SECRET_KEY, algorithms=["HS256"])
     except JWTError:
@@ -162,3 +154,21 @@ def predict(data: SurvieEntre, token: HTTPAuthorizationCredentials = Depends(bea
 
     return {"survived": survived, "prediction": prediction}
 
+@app.post("/api/weight", tags=["Weight prediction"])
+def predict_weight(data: PoidEntre, token: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
+    try:
+        payload = jwt.decode(token.credentials, SECRET_KEY, algorithms=["HS256"])
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide")
+
+    if token.credentials in token_blacklist:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Le token a été révoqué ou blacklisté")
+
+    # Convertir la taille de mètres à inches
+    taille_inch = data.taille * 39.37
+    prediction_pound = model_poid.predict([[taille_inch]])
+    prediction_kg = np.round(prediction_pound * 0.45359237, 2)  # Conversion en kg avec deux décimales
+
+    output_data = PoidSortie(prediction=prediction_kg)
+
+    return output_data
