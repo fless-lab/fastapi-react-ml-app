@@ -21,7 +21,7 @@ function Header() {
             <NavLink exact to="/image-cropper" activeClassName="active">Image Cropper</NavLink>
           </div>
           <div className="item">
-            <NavLink exact to="/model3" activeClassName="active">Model3</NavLink>
+            <NavLink exact to="/weight-predictor" activeClassName="active">Weight Predictor</NavLink>
           </div>
           <div className="right menu">
             <div className="item">

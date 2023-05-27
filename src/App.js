@@ -15,6 +15,7 @@ import Infos from "./pages/Infos";
 import Header from "./pages/components/Header";
 import TitanicSurvivor from "./pages/TitanicSurvivor";
 import ImageCropper from "./pages/ImageCropper";
+import WeightPredictor from "./pages/WeightPredictor";
 
 const PrivateOutlet = () => {
   const [authenticated, setAuthenticated] = useState(true);
@@ -50,6 +51,9 @@ function App() {
             </Route>
             <Route exact path="/image-cropper" element={<PrivateOutlet />}>
             <Route exact path="/image-cropper" element={<ImageCropper />} />
+            </Route>
+            <Route exact path="/weight-predictor" element={<PrivateOutlet />}>
+            <Route exact path="/weight-predictor" element={<WeightPredictor />} />
             </Route>
           </>
 
