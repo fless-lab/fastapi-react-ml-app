@@ -8,12 +8,12 @@ from datetime import datetime, timedelta
 from jose import jwt, JWTError
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
+from joblib import load
 
 app = FastAPI()
 
-# Set up CORS
 origins = [
-    "http://localhost:3000",  # Replace with the actual domain of your React application
+    "http://localhost:3000",
 ]
 
 app.add_middleware(
@@ -49,11 +49,19 @@ class UserLogin(BaseModel):
     email: str
     password: str
 
+class SurvieEntre(BaseModel):
+    age: int
+    sex: int
+    pclass: int
+
+class SurvieSortie(BaseModel):
+    survived: str
+
 @app.post("/api/register")
 def register(user: UserCreate):
     existing_user = db.query(User).filter(User.email == user.email).first()
     if existing_user:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Une utilisateur existe déjà avec cette même adresse mail")
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Un utilisateur existe déjà avec cette même adresse mail")
 
     hashed_password = PASSWORD_CONTEXT.hash(user.password)
     db_user = User(fullname=user.fullname, email=user.email, password=hashed_password)
@@ -67,8 +75,9 @@ def register(user: UserCreate):
 @app.post("/api/login")
 def login(user: UserLogin):
     db_user = db.query(User).filter(User.email == user.email).first()
+    print(db_user)
     if not db_user or not PASSWORD_CONTEXT.verify(user.password, db_user.password):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Nom d'utilisateur ou mot de passe incorrecte")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Nom d'utilisateur ou mot de passe incorrect")
 
     token = create_access_token({"email": user.email}, expires_delta=timedelta(days=1))
     return {"message": "Utilisateur connecté avec succès !", "access_token": token}
@@ -88,6 +97,7 @@ def logout(token: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
 
     return {"message": "Utilisateur déconnecté avec succès !"}
 
+
 def create_access_token(data: dict, expires_delta: timedelta):
     to_encode = data.copy()
     expire = datetime.utcnow() + expires_delta
@@ -97,7 +107,7 @@ def create_access_token(data: dict, expires_delta: timedelta):
 
 @app.get("/api")
 def public_route():
-    return {"message": "Hey, welcome to raouf's API. This route is not protected"}
+    return {"message": "Hey, welcome to Raouf's API. This route is not protected"}
 
 @app.get("/api/profile")
 def profile(token: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
@@ -107,7 +117,7 @@ def profile(token: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide")
 
     if token.credentials in token_blacklist:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Le token a été revoqué ou blacklisté")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Le token a été révoqué ou blacklisté")
 
     email = payload.get("email")
     user = db.query(User).filter(User.email == email).first()
@@ -116,3 +126,39 @@ def profile(token: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Utilisateur non trouvé")
 
     return {"fullname": user.fullname, "email": user.email}
+
+
+model_survie = load('titanic.joblib')
+
+# @app.post("/api/survivor", tags=["Titanic survivor"])
+# def predict(data: SurvieEntre, token: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
+#     try:
+#         payload = jwt.decode(token.credentials, SECRET_KEY, algorithms=["HS256"])
+#     except JWTError:
+#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide")
+
+#     if token.credentials in token_blacklist:
+#         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Le token a été révoqué ou blacklisté")
+
+#     new_data = [[data.age, data.sex, data.pclass]]
+#     prediction = model_survie.predict(new_data)
+#     survived = "Désolé ! Ce passager est mort." if prediction == 1 else "Bonne nouvelle ! Ce passager est en vie."
+
+#     return {"survived": survived,"prediction":prediction}
+
+@app.post("/api/survivor", tags=["Titanic survivor"])
+def predict(data: SurvieEntre, token: HTTPAuthorizationCredentials = Depends(bearer_scheme)):
+    try:
+        payload = jwt.decode(token.credentials, SECRET_KEY, algorithms=["HS256"])
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token invalide")
+
+    if token.credentials in token_blacklist:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Le token a été révoqué ou blacklisté")
+
+    new_data = [[data.age, data.sex, data.pclass]]
+    prediction = int(model_survie.predict(new_data)[0])
+    survived = "Désolé ! Ce passager est mort." if prediction == 0 else "Bonne nouvelle ! Ce passager est en vie."
+
+    return {"survived": survived, "prediction": prediction}
+
